@@ -15,6 +15,7 @@
 #include<fcntl.h>
 #include<signal.h>
 #include<sys/epoll.h>
+#include<time.h>
 
 /*function declaration*/
 int Socket(int domain,int type,int protocol);

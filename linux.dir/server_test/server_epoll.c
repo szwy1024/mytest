@@ -3,6 +3,8 @@
 
 #define SERVER_PORT 8888
 #define MAX 1024
+#define TIME_OUT 30
+#define TIME_ERR "time out,plsase restart"
 
 //define the struct
 struct my_event
@@ -15,6 +17,7 @@ struct my_event
 	char buf[BUFSIZ];
 	int len;
 	int number;
+	long time;
 };
 
 //declare gloabl tree
@@ -54,10 +57,10 @@ void acception(int fd,int event,void* arg)
 	socklen_t addrlen=sizeof(c_addr);
 
 	int cfd=Accept(fd,(struct sockaddr*)&c_addr,&addrlen);
-	
+
 	char c_ip[INET_ADDRSTRLEN];
 	printf("accpet the client:%d,IP is:%s,PORT is:%d\n",j,inet_ntop(AF_INET,&c_addr.sin_addr,c_ip,sizeof(c_ip)),ntohs(c_addr.sin_port));
-	
+
 	int flag=fcntl(cfd,F_GETFL);
 	flag|=O_NONBLOCK;
 	fcntl(cfd,F_SETFL,flag);
@@ -80,10 +83,11 @@ void receivedata(int fd,int event,void*arg)
 		printf("the client %d finished,socket will close\n",ev->number);
 		eventdel(fd,arg);
 		close(fd);
+		memset(ev,0,sizeof(struct my_event));
 		return;
 	}
-	eventdel(fd,arg);
 	ev->len=ret_read;
+	eventdel(fd,arg);
 	eventset(fd,arg,senddata);
 	eventadd(epfd,EPOLLOUT|EPOLLET,arg);
 }
@@ -105,21 +109,22 @@ void eventset(int fd,void*arg,void(*callback)(int,int,void*))
 	ev->fd=fd;
 	ev->callback=callback;
 	ev->arg=arg;
+	ev->time=time(NULL);
 }
 
 void eventadd(int epfd,int event,void*arg)
 {
 	struct my_event *ev=(struct my_event*)arg;
-	
+
 	ev->event=event;
 	ev->status=1;
-	
+
 	struct epoll_event *epv;
 	epv=(struct epoll_event*)malloc(sizeof(epv));
 
 	epv->events=event;
 	epv->data.ptr=arg;
-	
+
 	epoll_ctl(epfd,EPOLL_CTL_ADD,ev->fd,epv);
 }
 
@@ -135,10 +140,10 @@ int main(int argc,char*argv[])
 {
 	//epoll
 	epfd=epoll_create(MAX);
-	
+
 	//socket
 	int lfd=Socket(AF_INET,SOCK_STREAM,0);
-	
+
 	//setsockopt
 	int opt;
 	setsockopt(lfd,SOL_SOCKET,SO_REUSEADDR,(void*)&opt,sizeof(opt));
@@ -155,15 +160,37 @@ int main(int argc,char*argv[])
 
 	//eventset lfd
 	eventset(lfd,(void*)&evbuf[MAX],acception);
-	
+
 	//eventsddd lfd
 	eventadd(epfd,EPOLLIN|EPOLLET,(void*)&evbuf[MAX]);
 
 	struct epoll_event events[MAX];
 
+	int time_max=0;
 	while(1)
 	{
-		int ret=epoll_wait(epfd,events,MAX,-1);
+		long now=time(NULL);
+		//printf("system time %lu\n",now);
+		for(int t=0;t<MAX/10+1;t++,time_max++)
+		{
+			if(time_max==MAX)
+			{
+				time_max=0;
+			}
+			if(evbuf[t].status==1)
+			{
+				//printf("%d client time %lu\n",evbuf[t].number,evbuf[t].time);
+				long interval=now-evbuf[t].time;
+				if(interval>TIME_OUT)
+				{
+					eventdel(evbuf[t].fd,evbuf[t].arg);
+					write(evbuf[t].fd,TIME_ERR,sizeof(TIME_ERR));
+					printf("%d client time out\n",evbuf[t].number);
+					close(evbuf[t].fd);
+				}
+			}
+		}
+		int ret=epoll_wait(epfd,events,MAX,0);
 		for(int i=0;i<ret;i++)
 		{
 			struct my_event *ev=(struct my_event*)events[i].data.ptr;
