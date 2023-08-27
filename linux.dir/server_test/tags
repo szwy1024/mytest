@@ -1,0 +1,50 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	1	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+IP_LENGTH	./server_fork.c	7;"	d	file:
+LD_LIBRARY_PATH	./makefile	/^	export LD_LIBRARY_PATH=..\/mylib\/lib$/;"	m
+MAX	./server_epoll.c	5;"	d	file:
+SERVER_IP	./client_test.c	13;"	d	file:
+SERVER_MAX_PROC	./server_fork.c	5;"	d	file:
+SERVER_PORT	./client_test.c	12;"	d	file:
+SERVER_PORT	./server_epoll.c	4;"	d	file:
+SERVER_PORT	./server_fork.c	6;"	d	file:
+SERVER_PORT	./server_io.c	3;"	d	file:
+TIME_ERR	./server_epoll.c	7;"	d	file:
+TIME_OUT	./server_epoll.c	6;"	d	file:
+acception	./server_epoll.c	/^void acception(int fd,int event,void* arg)$/;"	f
+arg	./server_epoll.c	/^	void* arg;$/;"	m	struct:my_event	file:
+buf	./server_epoll.c	/^	char buf[BUFSIZ];$/;"	m	struct:my_event	file:
+callback	./server_epoll.c	/^	void (*callback)(int,int,void*);$/;"	m	struct:my_event	file:
+catch_child	./server_fork.c	/^void catch_child(int argc)$/;"	f
+epfd	./server_epoll.c	/^int epfd;$/;"	v
+evbuf	./server_epoll.c	/^struct my_event evbuf[MAX+1];$/;"	v	typeref:struct:my_event
+event	./server_epoll.c	/^	int event;$/;"	m	struct:my_event	file:
+eventadd	./server_epoll.c	/^void eventadd(int epfd,int event,void* arg)$/;"	f
+eventdel	./server_epoll.c	/^void eventdel(int epfd,void* arg)$/;"	f
+eventset	./server_epoll.c	/^void eventset(int fd,void* arg,void(*callback)(int,int,void*))$/;"	f
+fd	./server_epoll.c	/^	int fd;$/;"	m	struct:my_event	file:
+inc_path	./makefile	/^inc_path=-I..\/mylib\/inc$/;"	m
+len	./server_epoll.c	/^	int len;$/;"	m	struct:my_event	file:
+lib1	./makefile	/^lib1=$(patsubst ..\/mylib\/src\/%.o,..\/mylib\/lib\/lib%.so,$(obj1))$/;"	m
+lib_name	./makefile	/^lib_name=-lwrap$/;"	m
+lib_path	./makefile	/^lib_path=-L..\/mylib\/lib$/;"	m
+main	./client_test.c	/^int main(int argc,char*argv[])$/;"	f
+main	./server_epoll.c	/^int main(int argc,char* argv[])$/;"	f
+main	./server_fork.c	/^int main()$/;"	f
+main	./server_io.c	/^int main(int argc,char*argv[])$/;"	f
+my_event	./server_epoll.c	/^struct my_event$/;"	s	file:
+myargs	./makefile	/^myargs=-g -Wall$/;"	m
+number	./server_epoll.c	/^	int number;$/;"	m	struct:my_event	file:
+obj1	./makefile	/^obj1=$(patsubst ..\/mylib\/src\/%.c,..\/mylib\/src\/%.o,$(src1))$/;"	m
+obj2	./makefile	/^obj2=$(patsubst .\/%.c,.\/%,$(src2))$/;"	m
+receivedata	./server_epoll.c	/^void receivedata(int fd,int event,void* arg)$/;"	f
+seep	./server_epoll.c	/^	struct epoll_event* seep;$/;"	m	struct:my_event	typeref:struct:my_event::epoll_event	file:
+senddata	./server_epoll.c	/^void senddata(int fd,int event,void* arg)$/;"	f
+src1	./makefile	/^src1=$(wildcard ..\/mylib\/src\/*.c)$/;"	m
+src2	./makefile	/^src2=$(wildcard .\/*.c)$/;"	m
+status	./server_epoll.c	/^	int status;$/;"	m	struct:my_event	file:
+time	./server_epoll.c	/^	long time;$/;"	m	struct:my_event	file:

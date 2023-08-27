@@ -56,7 +56,6 @@ int main(int argc,char*argv[])
 	}
 
 	////handler
-	//int count=5;
 	while(1)
 	{
 		ret_read_stdin=read(STDIN_FILENO,buf1,sizeof(buf1));

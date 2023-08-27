@@ -12,12 +12,13 @@ struct my_event
 	int fd;
 	int event;
 	void* arg;
-	void (*callback)(int,int ,void*);
+	void (*callback)(int,int,void*);
 	int status;
 	char buf[BUFSIZ];
 	int len;
 	int number;
 	long time;
+	struct epoll_event* seep;
 };
 
 //declare gloabl tree
@@ -28,13 +29,13 @@ struct my_event evbuf[MAX+1];
 
 //callback function declare
 void acception(int fd,int event,void* arg);
-void receivedata(int fd,int event,void*arg);
-void senddata(int fd,int event,void*arg);
+void receivedata(int fd,int event,void* arg);
+void senddata(int fd,int event,void* arg);
 
 //epoperate function declare
-void eventset(int fd,void*arg,void(*callback)(int,int,void*));
-void eventadd(int epfd,int event,void*arg);
-void eventdel(int fd,void *arg);
+void eventset(int fd,void* arg,void(*callback)(int,int,void*));
+void eventadd(int epfd,int event,void* arg);
+void eventdel(int epfd,void* arg);
 
 //function defination
 void acception(int fd,int event,void* arg)
@@ -67,11 +68,13 @@ void acception(int fd,int event,void* arg)
 
 	eventset(cfd,(void*)&evbuf[j],receivedata);
 	eventadd(epfd,EPOLLIN|EPOLLET,(void*)&evbuf[j]);
+
+	return ;
 }
 
-void receivedata(int fd,int event,void*arg)
+void receivedata(int fd,int event,void* arg)
 {
-	struct my_event *ev=(struct my_event*)arg;
+	struct my_event* ev=(struct my_event*)arg;
 	int ret_read=Read(ev->fd,ev->buf,BUFSIZ);
 	for(int k=0;k<ret_read;k++)
 	{
@@ -81,68 +84,83 @@ void receivedata(int fd,int event,void*arg)
 	if(ret_read==0)
 	{
 		printf("the client %d finished,socket will close\n",ev->number);
-		eventdel(fd,arg);
+		eventdel(epfd,arg);
 		close(fd);
+		free(ev->seep);
 		memset(ev,0,sizeof(struct my_event));
 		return;
 	}
 	ev->len=ret_read;
-	eventdel(fd,arg);
+	eventdel(epfd,arg);
 	eventset(fd,arg,senddata);
-	eventadd(epfd,EPOLLOUT|EPOLLET,arg);
+	eventadd(epfd,EPOLLOUT,arg);
+
+	return ;
 }
 
-void senddata(int fd,int event,void*arg)
+void senddata(int fd,int event,void* arg)
 {
-	struct my_event *ev=(struct my_event*)arg;
+	struct my_event* ev=(struct my_event*)arg;
 	printf("will send data to %d\n",ev->number);
 	Write(ev->fd,ev->buf,ev->len);
-	eventdel(fd,arg);
+	eventdel(epfd,arg);
 	eventset(fd,arg,receivedata);
 	eventadd(epfd,EPOLLIN|EPOLLET,arg);
+
+	return ;
 }
 
-void eventset(int fd,void*arg,void(*callback)(int,int,void*))
+void eventset(int fd,void* arg,void(*callback)(int,int,void*))
 {
-	struct my_event *ev=(struct my_event*)arg;
+	struct my_event* ev=(struct my_event*)arg;
 
 	ev->fd=fd;
 	ev->callback=callback;
 	ev->arg=arg;
 	ev->time=time(NULL);
+	return ;
 }
 
-void eventadd(int epfd,int event,void*arg)
+void eventadd(int epfd,int event,void* arg)
 {
-	struct my_event *ev=(struct my_event*)arg;
+	struct my_event* ev=(struct my_event*)arg;
 
 	ev->event=event;
 	ev->status=1;
 
-	struct epoll_event *epv;
+	struct epoll_event* epv;
 	epv=(struct epoll_event*)malloc(sizeof(epv));
 
 	epv->events=event;
 	epv->data.ptr=arg;
 
+	ev->seep=epv;
+	
 	epoll_ctl(epfd,EPOLL_CTL_ADD,ev->fd,epv);
+
+	return ;
 }
 
-void eventdel(int fd,void *arg)
+void eventdel(int epfd,void* arg)
 {
-	struct my_event *ev=(struct my_event*)arg;
+	struct my_event* ev=(struct my_event*)arg;
 
 	ev->status=0;
 	epoll_ctl(epfd,EPOLL_CTL_DEL,ev->fd,NULL);
+
+	return ;
 }	
 
-int main(int argc,char*argv[])
+int main(int argc,char* argv[])
 {
 	//epoll
 	epfd=epoll_create(MAX);
 
 	//socket
 	int lfd=Socket(AF_INET,SOCK_STREAM,0);
+
+	//setnonblock
+	fcntl(lfd,F_SETFL,O_NONBLOCK);
 
 	//setsockopt
 	int opt;
@@ -162,7 +180,7 @@ int main(int argc,char*argv[])
 	eventset(lfd,(void*)&evbuf[MAX],acception);
 
 	//eventsddd lfd
-	eventadd(epfd,EPOLLIN|EPOLLET,(void*)&evbuf[MAX]);
+	eventadd(epfd,EPOLLIN,(void*)&evbuf[MAX]);
 
 	struct epoll_event events[MAX];
 
@@ -183,7 +201,7 @@ int main(int argc,char*argv[])
 				long interval=now-evbuf[t].time;
 				if(interval>TIME_OUT)
 				{
-					eventdel(evbuf[t].fd,evbuf[t].arg);
+					eventdel(epfd,evbuf[t].arg);
 					write(evbuf[t].fd,TIME_ERR,sizeof(TIME_ERR));
 					printf("%d client time out\n",evbuf[t].number);
 					close(evbuf[t].fd);
