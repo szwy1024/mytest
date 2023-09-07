@@ -1,7 +1,7 @@
 /*2023.8.26*/
 #include"wrap.h"
 
-#define SERVER_PORT 8888
+#define SERVER_PORT 8000
 #define MAX 1024
 #define TIME_OUT 30
 #define TIME_ERR "time out,plsase restart"
@@ -101,9 +101,9 @@ void acception(int fd,int event,void* arg)
 	char c_ip[INET_ADDRSTRLEN];
 	printf("accpet the client:%d,IP is:%s,PORT is:%d\n",j,inet_ntop(AF_INET,&c_addr.sin_addr,c_ip,sizeof(c_ip)),ntohs(c_addr.sin_port));
 
-	int flag=fcntl(cfd,F_GETFL);
-	flag|=O_NONBLOCK;
-	fcntl(cfd,F_SETFL,flag);
+	//int flag=fcntl(cfd,F_GETFL);
+	//flag|=O_NONBLOCK;
+	//fcntl(cfd,F_SETFL,flag);
 
 	eventset(cfd,(void*)&evbuf[j],receivedata);
 	eventadd(epfd,EPOLLIN|EPOLLET,(void*)&evbuf[j]);
@@ -214,11 +214,11 @@ int main(int argc,char* argv[])
 	int lfd=Socket(AF_INET,SOCK_STREAM,0);
 
 	//setnonblock
-	fcntl(lfd,F_SETFL,O_NONBLOCK);
+	//fcntl(lfd,F_SETFL,O_NONBLOCK);
 
 	//setsockopt
-	int opt;
-	setsockopt(lfd,SOL_SOCKET,SO_REUSEADDR,(void*)&opt,sizeof(opt));
+	//int opt;
+	//setsockopt(lfd,SOL_SOCKET,SO_REUSEADDR,(void*)&opt,sizeof(opt));
 
 	//bind
 	struct sockaddr_in s_addr;
@@ -262,7 +262,7 @@ int main(int argc,char* argv[])
 				}
 			}
 		}
-		int ret=epoll_wait(epfd,events,MAX,0);
+		int ret=epoll_wait(epfd,events,MAX,-1);
 		for(int i=0;i<ret;i++)
 		{
 			struct my_event *ev=(struct my_event*)events[i].data.ptr;
